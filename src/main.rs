@@ -1,9 +1,11 @@
 extern crate chrono;
-use chrono::prelude::*;
+
+use chrono::{Local, TimeZone};
+use crate::calc::Reading;
 mod calc;
 
 fn main() {
-    let reading = calc::Reading {
+    let reading = Reading {
                     date: Local.ymd(2001, 1, 1),
                     generation: 10.0,
                     grid_import: 10.0,
