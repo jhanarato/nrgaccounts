@@ -2,7 +2,7 @@ extern crate chrono;
 
 use chrono::{Local, TimeZone};
 use crate::calc::Reading;
-mod calc;
+pub mod calc;
 
 fn main() {
     let reading = Reading {

@@ -1,9 +1,9 @@
-// A module to perform various calculations based on inverter and meter readings.
-//
+/// A module to perform various calculations based on inverter and meter readings.
+
 use chrono::Date;
 use chrono::Local;
 
-// Readings taken from the meter and inverter.
+/// Readings taken from the meter and inverter.
 pub struct Reading {
     pub date : Date<Local>, 
     pub generation: f32, 
