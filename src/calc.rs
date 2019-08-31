@@ -16,6 +16,13 @@ pub struct Calculation {
     pub grid_export: f32,
 }
 
+// Self consumption fractions represented as a 
+// number between 0 and 1.
+pub struct Fractions {
+    pub of_generation: f32,
+    pub of_total_consumption: f32,
+}
+
 impl Calculation {
     // Get the amount of energy delivered by the inverter
     // used on the premises in kilowatt/hours.
@@ -29,16 +36,12 @@ impl Calculation {
         self.self_consumption() + self.grid_import
     }
 
-    // Get a value between 0 and 1 for self generation
-    // as a portion of total generation.
-    pub fn percentage_of_generation_self_consumed(&self) -> f32 {
-        self.self_consumption() / self.generation * 100.0
-    }
-    
-    // Get the amount of consumed self generated energy as
-    // a percentage of total amount of energy consumed.
-    pub fn percentage_of_total_consumption_self_generated(&self) -> f32 {
-        self.self_consumption() / self.total_consumption() * 100.0
+    pub fn self_consumption_fractions(&self) -> Fractions {
+        Fractions {
+            of_generation: self.self_consumption() / self.generation,
+            of_total_consumption: self.self_consumption() / self.total_consumption(),
+        }
+
     }
 }
 
@@ -68,7 +71,7 @@ mod tests {
             grid_export: 3.0,
         };
 
-        assert_eq!(calc.percentage_of_generation_self_consumed(), 90.0);
+        assert_eq!(calc.self_consumption_fractions().of_generation, 0.9);
     }
 
     #[test]
@@ -93,6 +96,6 @@ mod tests {
             grid_export: 10.0, 
         };
         
-        assert_eq!(calc.percentage_of_total_consumption_self_generated(), 20.0);
+        assert_eq!(calc.self_consumption_fractions().of_total_consumption, 0.2);
     }
 }
