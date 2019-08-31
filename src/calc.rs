@@ -1,5 +1,3 @@
-/// A module to perform various calculations based on inverter and meter readings.
-
 use chrono::Date;
 use chrono::Local;
 

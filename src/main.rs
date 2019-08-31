@@ -1,8 +1,6 @@
-extern crate chrono;
 
 use chrono::{Local, TimeZone};
-use crate::calc::Reading;
-pub mod calc;
+use nrgaccounts::calc::Reading;
 
 fn main() {
     let reading = Reading {
