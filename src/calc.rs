@@ -1,101 +1,59 @@
-use chrono::Date;
-use chrono::Local;
+// Calculate stats based on meter readings.
 
-pub struct Reading {
-    pub date: Date<Local>, 
-    pub generation: f32, 
-    pub grid_import: f32,
-    pub grid_export: f32,
-}
+const FEED_IN_TARIFF : f32 = 7.135;
+const SUPPLY_TARIFF : f32 =  25.752;
 
-// A set of calculations for a given period of time.
-pub struct Calculation {
-    pub days: u32,         // Number of days between readings.
-    pub generation: f32,    
-    pub grid_import: f32,  
-    pub grid_export: f32,
-}
+pub fn calculate(generation_kwh: f32, 
+                 grid_import_kwh: f32, 
+                 grid_export_kwh: f32) -> Calculation {
 
-// Self consumption fractions represented as a 
-// number between 0 and 1.
-pub struct Fractions {
-    pub of_generation: f32,
-    pub of_total_consumption: f32,
-}
-
-impl Calculation {
-    // Get the amount of energy delivered by the inverter
-    // used on the premises in kilowatt/hours.
-    pub fn self_consumption(&self) -> f32 {
-        self.generation - self.grid_export
-    }
+    let self_consumption_kwh = generation_kwh - grid_export_kwh;
+    let total_consumption_kwh = self_consumption_kwh + grid_import_kwh;
     
-    // Get the total amount of energy consumed both
-    // from the grid and from the inverter in kilowatt/hours.
-    pub fn total_consumption(&self) -> f32 {
-        self.self_consumption() + self.grid_import
-    }
+    let self_consumption = SelfConsumption {
+        kwh : self_consumption_kwh,
+        fraction_of_generation : self_consumption_kwh / generation_kwh,
+        fraction_of_total_use : self_consumption_kwh / total_consumption_kwh,
+    };
+    let from_self_consumption = self_consumption.kwh * SUPPLY_TARIFF;
+    let from_exports = grid_export_kwh * FEED_IN_TARIFF;
 
-    pub fn self_consumption_fractions(&self) -> Fractions {
-        Fractions {
-            of_generation: self.self_consumption() / self.generation,
-            of_total_consumption: self.self_consumption() / self.total_consumption(),
-        }
+    let savings = Savings {
+        from_exports,
+        from_self_consumption,
+        total : from_exports + from_self_consumption,
+    };
 
-    }
+    let calculation = Calculation {
+        generation_kwh,
+        grid_import_kwh,
+        grid_export_kwh,
+        total_consumption_kwh,
+        self_consumption,
+        savings,
+    };
+    calculation
 }
 
-// Beginning of unit test section.
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub struct Calculation {
+    pub generation_kwh: f32,
+    pub grid_import_kwh: f32,
+    pub grid_export_kwh: f32,
+    pub total_consumption_kwh: f32,
 
-    #[test]
-    fn self_consumption() {
-        let calc = Calculation {
-            days: 1,
-            generation:  10.0,
-            grid_import: 50.0, // Not important for this test.
-            grid_export: 7.0,
-        };
-
-        assert_eq!(calc.self_consumption(), 3.0);
-    }
-
-    #[test]
-    fn percentage_of_generation_self_consumed() {
-        let calc = Calculation {
-            days: 1,
-            generation:  30.0,
-            grid_import: 50.0, // Not important for this test.
-            grid_export: 3.0,
-        };
-
-        assert_eq!(calc.self_consumption_fractions().of_generation, 0.9);
-    }
-
-    #[test]
-    fn total_consumption () {
-        let calc = Calculation {
-            days: 1,
-            generation:  30.0,
-            grid_import: 50.0, 
-            grid_export: 3.0, 
-        };
-        
-        assert_eq!(calc.total_consumption(), 77.0)
-
-    }
-
-    #[test]
-    fn percentage_of_total_consumption_self_generated() {
-        let calc = Calculation {
-            days: 1,
-            generation:  30.0,
-            grid_import: 80.0, 
-            grid_export: 10.0, 
-        };
-        
-        assert_eq!(calc.self_consumption_fractions().of_total_consumption, 0.2);
-    }
+    pub self_consumption: SelfConsumption,
+    pub savings: Savings,
 }
+
+pub struct SelfConsumption {
+    pub kwh: f32,
+    pub fraction_of_total_use: f32,
+    pub fraction_of_generation: f32,
+}
+
+pub struct Savings {
+    pub from_self_consumption: f32,
+    pub from_exports: f32,
+    pub total: f32,
+}
+
