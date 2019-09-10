@@ -80,3 +80,108 @@ pub struct Savings {
     pub total: f32,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generation_kwh() {
+        let generation = 3.0; 
+        let import = 2.0; 
+        let export = 2.0;
+        let expected = generation;
+        let calculation = calculate(generation, import, export);
+        assert_eq!(calculation.generation_kwh, expected);
+    }
+
+    #[test]
+    fn grid_import_kwh() {
+        let generation = 3.0; 
+        let import = 1.0; 
+        let export = 2.0;
+        let expected = import;
+        let calculation = calculate(generation, import, export);
+        assert_eq!(calculation.grid_import_kwh, expected);
+    }
+
+    #[test]
+    fn grid_export_kwh() {
+        let generation = 3.0; 
+        let import = 1.0; 
+        let export = 2.0;
+        let expected = export;
+        let calculation = calculate(generation, import, export);
+        assert_eq!(calculation.grid_export_kwh, expected);
+    }
+
+    #[test]
+    fn total_consumption_kwh() {
+        let generation = 3.0; 
+        let import = 2.0; 
+        let export = 1.0;
+        let expected = 4.0;
+        let calculation = calculate(generation, import, export);
+        assert_eq!(calculation.total_consumption_kwh, expected);
+    }
+
+    #[test]
+    fn self_consumption_kwh() {
+        let generation = 3.0; 
+        let import = 2.0; 
+        let export = 1.0;
+        let expected = 2.0;
+        let calculation = calculate(generation, import, export);
+        assert_eq!(calculation.self_consumption.kwh, expected);
+    }
+
+    #[test]
+    fn fraction_of_total_use() {
+        let generation = 3.0; 
+        let import = 2.0; 
+        let export = 1.0;
+        let expected = 0.5;
+        let calculation = calculate(generation, import, export);
+        assert_eq!(calculation.self_consumption.fraction_of_total_use, expected);
+    }
+    
+    #[test]
+    fn fraction_of_generation() {
+        let generation = 10.0; 
+        let import = 4.0; 
+        let export = 2.5;
+        let expected = 0.75;
+        let calculation = calculate(generation, import, export);
+        assert_eq!(calculation.self_consumption.fraction_of_generation, expected);
+    }
+    
+    #[test]
+    fn savings_from_self_consumption() {
+        let generation = 3.0; 
+        let import = 2.0; 
+        let export = 1.0;
+        let expected = 2.0 * SUPPLY_TARIFF;
+        let calculation = calculate(generation, import, export);
+        assert_eq!(calculation.savings.from_self_consumption, expected);
+    }
+
+    #[test]
+    fn savings_from_exports() {
+        let generation = 3.0; 
+        let import = 2.0; 
+        let export = 3.0;
+        let expected = 3.0 * FEED_IN_TARIFF;
+        let calculation = calculate(generation, import, export);
+        assert_eq!(calculation.savings.from_exports, expected);
+    }
+  
+    #[test]
+    fn savings_total() {
+        let generation = 7.0; 
+        let import = 2.0; 
+        let export = 3.0;
+        let expected = 4.0 * SUPPLY_TARIFF + 3.0 * FEED_IN_TARIFF;
+        let calculation = calculate(generation, import, export);
+        assert_eq!(calculation.savings.total, expected);
+    }
+
+}
