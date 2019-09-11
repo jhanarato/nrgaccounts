@@ -1,9 +1,9 @@
-use chrono::{ Local, DateTime };
+use chrono::{ Local, Date, TimeZone };
 
 /// A collection of readings for a given date. 
 pub struct Reading {
     /// The date the readings were made.
-    date: DateTime<Local>,
+    date: Date<Local>,
     /// The total generated energy from the inverter in kilowatt / hours.
     generation: f32,
     /// The total amount of energy exported to the grid 
@@ -47,5 +47,32 @@ pub fn find_change(first: Reading, second: Reading) -> DiurnalChange {
         generation,
         exports,
         imports, 
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_find_change() {
+        let first_reading = Reading {
+            date: Local.ymd(2001, 1, 1),
+            generation: 10.0,
+            exports: 7.0,
+            imports: 2.0,
+        };
+
+        let second_reading = Reading {
+            date: Local.ymd(2001, 1, 5),
+            generation: 30.0,
+            exports: 19.0,
+            imports: 6.0, 
+        };
+
+        let change = find_change(first_reading, second_reading);
+        assert_eq!(change.generation, 5.0);
+        assert_eq!(change.exports, 3.0);
+        assert_eq!(change.imports, 1.0);
     }
 }
