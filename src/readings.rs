@@ -1,4 +1,4 @@
-use chrono::{ Local, Date, TimeZone };
+use chrono::{ Local, Date };
 
 /// A collection of readings for a given date. 
 pub struct Reading {
@@ -53,6 +53,7 @@ pub fn find_change(first: Reading, second: Reading) -> DiurnalChange {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::{ Local, TimeZone };
 
     #[test]
     fn test_find_change() {
