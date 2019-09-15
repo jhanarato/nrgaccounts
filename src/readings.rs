@@ -3,15 +3,15 @@ use chrono::{ Local, Date, TimeZone };
 /// A collection of readings for a given date. 
 pub struct Reading {
     /// The date the readings were made.
-    date: Date<Local>,
+    pub date: Date<Local>,
     /// The total generated energy from the inverter in kilowatt / hours.
-    generation: f32,
+    pub generation: f32,
     /// The total amount of energy exported to the grid 
     /// from the electricity meter in kilowatt / hours.
-    exports: f32,
+    pub exports: f32,
     /// The total amount of energy imported from 
     /// the grid by the electricity meter in kilowatt / hours.. 
-    imports: f32,
+    pub imports: f32,
 }
 
 /// Amounts of energy from dusk on one day to dusk
@@ -19,11 +19,11 @@ pub struct Reading {
 /// often you read the meter.
 pub struct DiurnalChange {
     /// The inverter generation in kilowatt / hours.
-    generation: f32,
+    pub generation: f32,
     /// The energy exported to the grid in kilowatt / hours.
-    exports: f32,
+    pub exports: f32,
     /// The energy imported from the grid in kilowatt /hours.
-    imports: f32,
+    pub imports: f32,
 }
 
 /// Given two readings on different days, calculate the 
