@@ -81,9 +81,36 @@ pub struct Savings {
     pub total: f32,
 }
 
+/// Allow a Calculation object to be passed to println!() etc.
 impl fmt::Display for Calculation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Merry Christmas, you filthy animals!")
+        let mut lines: Vec<String> = Vec::new();
+        lines.push(format!("Generation: {:.2} kWh/day\n", self.generation_kwh));
+        lines.push(format!("Exports:    {:.2} kWh/day\n", self.grid_export_kwh));
+        lines.push(format!("Imports:    {:.2} kWh/day\n", self.grid_import_kwh));
+        lines.push(format!("Total use:  {:.2} kWh/day\n", self.total_consumption_kwh));
+
+        lines.push("Self consumption:\n".to_string());
+        lines.push(format!("    Energy:         {:.2} kWh/day\n", self.self_consumption.kwh));
+        lines.push(format!("    % of total:     {:.2}%\n", 
+                           (self.self_consumption.fraction_of_total_use * 100.0)));
+        lines.push(format!("    % of generated: {:.2}%\n", 
+                           (self.self_consumption.fraction_of_generation * 100.0)));
+         
+        lines.push("Savings:\n".to_string());
+        lines.push(format!("   By self-consumption: ${:.2}\n", 
+                           self.savings.from_self_consumption));
+        lines.push(format!("   From exports:        ${:.2}\n", self.savings.from_exports));
+        lines.push(format!("   Total:               ${:.2}\n", self.savings.total));
+
+        
+        let mut output = String::new();
+
+        for line in lines.iter() {
+            output.push_str(line.as_str());
+        }
+        
+        write!(f, "{}", output)
     }
 }
 
