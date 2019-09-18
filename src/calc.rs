@@ -1,4 +1,5 @@
 /// Calculate stats based on meter readings.
+use std::fmt;
 
 use crate::readings::DiurnalChange;
 
@@ -78,6 +79,12 @@ pub struct Savings {
     pub from_exports: f32,
     /// Overall savings due to solar.
     pub total: f32,
+}
+
+impl fmt::Display for Calculation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Merry Christmas, you filthy animals!")
+    }
 }
 
 #[cfg(test)]
