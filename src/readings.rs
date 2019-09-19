@@ -14,6 +14,12 @@ pub struct Reading {
     pub imports: f32,
 }
 
+/// Two readings, the first being earlier than the second.
+pub struct ReadingPair {
+    pub first: Reading,
+    pub second: Reading,
+}
+
 /// Amounts of energy from dusk on one day to dusk
 /// on the next. May be an average depending on how
 /// often you read the meter.
@@ -28,15 +34,15 @@ pub struct DiurnalChange {
 
 /// Given two readings on different days, calculate the 
 /// change in the values per day.
-pub fn find_change(first: Reading, second: Reading) -> DiurnalChange {
-    let duration = second.date.signed_duration_since(first.date);
+pub fn find_change(pair: ReadingPair) -> DiurnalChange {
+    let duration = pair.second.date.signed_duration_since(pair.first.date);
     let days_spanned = duration.num_days();
     let days_spanned = days_spanned as f32; 
 
     // Get the difference.
-    let generation = second.generation - first.generation;
-    let exports = second.exports - first.exports;
-    let imports = second.imports - first.imports;
+    let generation = pair.second.generation - pair.first.generation;
+    let exports = pair.second.exports - pair.first.exports;
+    let imports = pair.second.imports - pair.first.imports;
 
     // Get the averages
     let generation = generation / days_spanned;
@@ -56,21 +62,23 @@ mod tests {
 
     #[test]
     fn test_find_change() {
-        let first_reading = Reading {
+        let first = Reading {
             date: NaiveDate::from_ymd(2001, 1, 1),
             generation: 10.0,
             exports: 7.0,
             imports: 2.0,
         };
 
-        let second_reading = Reading {
+        let second = Reading {
             date: NaiveDate::from_ymd(2001, 1, 5),
             generation: 30.0,
             exports: 19.0,
             imports: 6.0, 
         };
 
-        let change = find_change(first_reading, second_reading);
+        let pair = ReadingPair { first, second };
+
+        let change = find_change(pair);
         assert_eq!(change.generation, 5.0);
         assert_eq!(change.exports, 3.0);
         assert_eq!(change.imports, 1.0);
