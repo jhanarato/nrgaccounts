@@ -1,11 +1,24 @@
 use chrono::{ NaiveDate };
+use std::io;
+
+pub fn ask_for_date() -> Result<NaiveDate, &'static str> {
+    
+    let mut input = String::new(); 
+    match io::stdin().read_line(&mut input) {
+        Ok(_) => {
+            input.pop(); // Remove trailing newline.
+            parse_date(input.as_str())
+        },
+        Err(e) => panic!("Unexpected error {}", e),
+    }
+}
 
 /// Given a date as an ISO formatted string return
 /// a chrono date object. Assuming input is valid.
-pub fn parse_date(date_str: &str) -> Result<NaiveDate, &'static str> {
+fn parse_date(date_str: &str) -> Result<NaiveDate, &'static str> {
     let date = NaiveDate::parse_from_str(date_str, "%F");
     match date {
-        Err(_e) => Err("Failed to parse date."),
+        Err(_e) => Err("Failed to parse date"),
         Ok(d) => Ok(d), 
     }
 }
