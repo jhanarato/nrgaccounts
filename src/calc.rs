@@ -3,15 +3,17 @@ use std::fmt;
 
 use crate::readings::DiurnalChange;
 
-/// The tarff to put a kilowatt/hour of energy into the grid.
-pub const FEED_IN_TARIFF : f32 = 7.135;
 
-/// The tariff for consuming a kilowatt/hour of energy from the grid.
-pub const SUPPLY_TARIFF : f32 =  25.752;
-
+/// Tariffs set by energy retailer.
+pub struct Tariffs {
+    /// Dollars paid to export energy to grid.
+    pub export: f32,
+    /// Dollars charged to import energy from the grid.
+    pub import: f32, 
+}
 /// Calculate a variety of values related to energy consumption
 /// and production and return the information as a Calculation.
-pub fn calculate(change: DiurnalChange) -> Calculation {
+pub fn calculate(change: DiurnalChange, tarrifs: Tariffs) -> Calculation {
 
     let self_consumption_kwh = change.generation - change.exports;
     let total_consumption_kwh = self_consumption_kwh + change.imports;
@@ -21,8 +23,8 @@ pub fn calculate(change: DiurnalChange) -> Calculation {
         fraction_of_generation : self_consumption_kwh / change.generation,
         fraction_of_total_use : self_consumption_kwh / total_consumption_kwh,
     };
-    let from_self_consumption = self_consumption.kwh * SUPPLY_TARIFF;
-    let from_exports = change.exports * FEED_IN_TARIFF;
+    let from_self_consumption = self_consumption.kwh * tarrifs.import;
+    let from_exports = change.exports * tarrifs.export;
 
     let savings = Savings {
         from_exports,
@@ -92,13 +94,13 @@ impl fmt::Display for Calculation {
         lines.push(format!("    Total use:  {:.2} kWh\n", self.total_consumption_kwh));
 
         lines.push("Self consumption:\n".to_string());
-        lines.push(format!("    Energy:         {:.2} kWh/day\n", self.self_consumption.kwh));
+        lines.push(format!("    Daily:          {:.2} kWh\n", self.self_consumption.kwh));
         lines.push(format!("    % of total:     {:.2}%\n", 
                            (self.self_consumption.fraction_of_total_use * 100.0)));
         lines.push(format!("    % of generated: {:.2}%\n", 
                            (self.self_consumption.fraction_of_generation * 100.0)));
          
-        lines.push("Savings:\n".to_string());
+        lines.push("Daily savings:\n".to_string());
         lines.push(format!("   By self-consumption: ${:.2}\n", 
                            self.savings.from_self_consumption));
         lines.push(format!("   From exports:        ${:.2}\n", self.savings.from_exports));
@@ -119,6 +121,13 @@ impl fmt::Display for Calculation {
 mod tests {
     use super::*;
 
+    fn  tariffs() -> Tariffs {
+        Tariffs {
+            export: 1.0,
+            import: 2.0,
+        }
+    }
+
     #[test]
     fn generation_kwh() {
         let change = DiurnalChange {
@@ -128,7 +137,7 @@ mod tests {
         };
 
         let expected = change.generation;
-        let calculation = calculate(change);
+        let calculation = calculate(change, tariffs());
         assert_eq!(calculation.generation_kwh, expected);
     }
 
@@ -141,7 +150,7 @@ mod tests {
         };
 
         let expected = change.imports;
-        let calculation = calculate(change);
+        let calculation = calculate(change, tariffs());
         assert_eq!(calculation.grid_import_kwh, expected);
     }
 
@@ -153,7 +162,7 @@ mod tests {
             exports: 2.0,
         };
         let expected = change.exports;
-        let calculation = calculate(change);
+        let calculation = calculate(change, tariffs());
         assert_eq!(calculation.grid_export_kwh, expected);
     }
 
@@ -165,7 +174,7 @@ mod tests {
             exports: 1.0,
         };
         let expected = 4.0;
-        let calculation = calculate(change);
+        let calculation = calculate(change, tariffs());
         assert_eq!(calculation.total_consumption_kwh, expected);
     }
 
@@ -177,7 +186,7 @@ mod tests {
             exports: 1.0,
         };
         let expected = 2.0;
-        let calculation = calculate(change);
+        let calculation = calculate(change, tariffs());
         assert_eq!(calculation.self_consumption.kwh, expected);
     }
 
@@ -189,7 +198,7 @@ mod tests {
             exports: 1.0,
         };
         let expected = 0.5;
-        let calculation = calculate(change);
+        let calculation = calculate(change, tariffs());
         assert_eq!(calculation.self_consumption.fraction_of_total_use, expected);
     }
     
@@ -201,7 +210,7 @@ mod tests {
             exports: 2.5,
         };
         let expected = 0.75;
-        let calculation = calculate(change);
+        let calculation = calculate(change, tariffs());
         assert_eq!(calculation.self_consumption.fraction_of_generation, expected);
     }
     
@@ -212,8 +221,8 @@ mod tests {
             imports: 2.0,
             exports: 1.0,
         };
-        let expected = 2.0 * SUPPLY_TARIFF;
-        let calculation = calculate(change);
+        let expected = 2.0 * tariffs().import;
+        let calculation = calculate(change, tariffs());
         assert_eq!(calculation.savings.from_self_consumption, expected);
     }
 
@@ -224,8 +233,8 @@ mod tests {
             imports: 2.0,
             exports: 3.0,
         };
-        let expected = 3.0 * FEED_IN_TARIFF;
-        let calculation = calculate(change);
+        let expected = 3.0 * tariffs().export;
+        let calculation = calculate(change, tariffs());
         assert_eq!(calculation.savings.from_exports, expected);
     }
   
@@ -236,9 +245,34 @@ mod tests {
             imports: 2.0,
             exports: 3.0,
         };
-        let expected = 4.0 * SUPPLY_TARIFF + 3.0 * FEED_IN_TARIFF;
-        let calculation = calculate(change);
+        let expected = 4.0 * tariffs().import + 3.0 * tariffs().export;
+        let calculation = calculate(change, tariffs());
         assert_eq!(calculation.savings.total, expected);
     }
 
+    #[test]
+    fn test_tariffs() {
+       let tariffs = Tariffs {
+           import: 0.50,
+           export: 0.10,
+       };
+
+       let change = DiurnalChange {
+           generation: 12.0,
+           imports: 20.0,
+           exports: 2.0,
+        };
+       
+        assert_eq!(tariffs.import, 0.50);
+        assert_eq!(tariffs.export, 0.10);
+
+        let calculation = calculate(change, tariffs);
+
+        assert_eq!(calculation.self_consumption.kwh, 10.0, "Self consumption wrong.");
+        assert_eq!(calculation.grid_export_kwh, 2.0, "Grid export kwh wrong.");
+        assert_eq!(calculation.savings.from_exports, 0.20, "Export savings wrong.");
+        assert_eq!(calculation.savings.from_self_consumption, 5.0, 
+                   "Self consumption savings wrong.");
+        assert_eq!(calculation.savings.total, 5.20, "Total savings wrong.");
+    }
 }

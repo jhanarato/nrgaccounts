@@ -23,7 +23,7 @@ fn get_reading()-> Reading {
         let date = ask_for_date();
         match date {
            Ok(d)=> break d, 
-           Err(_e) => println!("Could not parse date. Try again."), 
+           Err(_e) => println!("Invalid date."), 
         }
     };
 
@@ -33,7 +33,7 @@ fn get_reading()-> Reading {
         let generation = ask_for_number();
         match generation {
             Ok(g) => break g,
-            Err(_e) => println!("Could not parse number, try again."),
+            Err(_e) => println!("Invalid number."),
         }
     };
 

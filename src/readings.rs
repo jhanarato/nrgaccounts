@@ -83,7 +83,7 @@ mod tests {
 
         let pair = ReadingPair { first, second };
 
-        let change = find_change(pair);
+        let change = find_change(&pair);
         assert_eq!(change.generation, 5.0);
         assert_eq!(change.exports, 3.0);
         assert_eq!(change.imports, 1.0);
