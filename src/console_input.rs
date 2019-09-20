@@ -18,7 +18,7 @@ pub fn get_reading_pair() -> ReadingPair {
 fn get_reading()-> Reading {
 
     let date = loop {
-        print!("    Date [DD-MM-YYYY]:  ");
+        print!("    Date [DD-MM-YY]:    ");
         io::stdout().flush().ok().expect("Could not flush!");
         let date = ask_for_date();
         match date {
@@ -104,15 +104,15 @@ mod tests {
 
     #[test]
     fn good_date_input() {
-        let actual_result = parse_date("1999-12-31");
+        let actual_result = parse_date("31-12-99");
         let expected_result = Ok(NaiveDate::from_ymd(1999, 12, 31));
         assert_eq!(actual_result, expected_result); 
     }
 
     #[test]
     fn bad_date_input() {
-        let actual_result = parse_date("1999-12-31*");
-        let expected_result = Err("Failed to parse date.");
+        let actual_result = parse_date("*31-12-99");
+        let expected_result = Err("Failed to parse date");
         assert_eq!(actual_result, expected_result); 
     }
 }

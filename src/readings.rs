@@ -20,6 +20,14 @@ pub struct ReadingPair {
     pub second: Reading,
 }
 
+impl ReadingPair {
+    pub fn days_spanned(&self) -> f32 {
+        let duration = self.second.date.signed_duration_since(self.first.date);
+        let days_spanned = duration.num_days();
+        days_spanned as f32
+    }
+}
+
 /// Amounts of energy from dusk on one day to dusk
 /// on the next. May be an average depending on how
 /// often you read the meter.
@@ -34,10 +42,7 @@ pub struct DiurnalChange {
 
 /// Given two readings on different days, calculate the 
 /// change in the values per day.
-pub fn find_change(pair: ReadingPair) -> DiurnalChange {
-    let duration = pair.second.date.signed_duration_since(pair.first.date);
-    let days_spanned = duration.num_days();
-    let days_spanned = days_spanned as f32; 
+pub fn find_change(pair: &ReadingPair) -> DiurnalChange {
 
     // Get the difference.
     let generation = pair.second.generation - pair.first.generation;
@@ -45,9 +50,9 @@ pub fn find_change(pair: ReadingPair) -> DiurnalChange {
     let imports = pair.second.imports - pair.first.imports;
 
     // Get the averages
-    let generation = generation / days_spanned;
-    let exports = exports / days_spanned;
-    let imports = imports / days_spanned;
+    let generation = generation / pair.days_spanned();
+    let exports = exports / pair.days_spanned();
+    let imports = imports / pair.days_spanned();
 
     DiurnalChange {
         generation,
