@@ -85,10 +85,11 @@ pub struct Savings {
 impl fmt::Display for Calculation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut lines: Vec<String> = Vec::new();
-        lines.push(format!("Generation: {:.2} kWh/day\n", self.generation_kwh));
-        lines.push(format!("Exports:    {:.2} kWh/day\n", self.grid_export_kwh));
-        lines.push(format!("Imports:    {:.2} kWh/day\n", self.grid_import_kwh));
-        lines.push(format!("Total use:  {:.2} kWh/day\n", self.total_consumption_kwh));
+        lines.push("Average daily traffic:\n".to_string());
+        lines.push(format!("    Generation: {:.2} kWh\n", self.generation_kwh));
+        lines.push(format!("    Exports:    {:.2} kWh\n", self.grid_export_kwh));
+        lines.push(format!("    Imports:    {:.2} kWh\n", self.grid_import_kwh));
+        lines.push(format!("    Total use:  {:.2} kWh\n", self.total_consumption_kwh));
 
         lines.push("Self consumption:\n".to_string());
         lines.push(format!("    Energy:         {:.2} kWh/day\n", self.self_consumption.kwh));

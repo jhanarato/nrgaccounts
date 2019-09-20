@@ -18,7 +18,7 @@ pub fn get_reading_pair() -> ReadingPair {
 fn get_reading()-> Reading {
 
     let date = loop {
-        print!("Date [YYYY-MM-DD]: ");
+        print!("    Date [DD-MM-YYYY]:  ");
         io::stdout().flush().ok().expect("Could not flush!");
         let date = ask_for_date();
         match date {
@@ -28,7 +28,7 @@ fn get_reading()-> Reading {
     };
 
     let generation = loop {
-        print!("Generation [kWh]: ");
+        print!("    Generation [kWh]:   ");
         io::stdout().flush().ok().expect("Could not flush!");
         let generation = ask_for_number();
         match generation {
@@ -38,7 +38,7 @@ fn get_reading()-> Reading {
     };
 
     let exports = loop {
-        print!("Grid exports [kWh]:  ");
+        print!("    Grid exports [kWh]: ");
         io::stdout().flush().ok().expect("Could not flush!");
         let exports = ask_for_number();
         match exports {
@@ -48,7 +48,7 @@ fn get_reading()-> Reading {
     };
 
     let imports = loop {
-        print!("Grid imports [kWh]:  ");
+        print!("    Grid imports [kWh]: ");
         io::stdout().flush().ok().expect("Could not flush!");
         let imports= ask_for_number();
         match imports {
@@ -91,7 +91,7 @@ fn ask_for_date() -> Result<NaiveDate, &'static str> {
 /// Given a date as an ISO formatted string return
 /// a chrono date object. Assuming input is valid.
 fn parse_date(date_str: &str) -> Result<NaiveDate, &'static str> {
-    let date = NaiveDate::parse_from_str(date_str, "%F");
+    let date = NaiveDate::parse_from_str(date_str, "%d-%m-%y");
     match date {
         Err(_e) => Err("Failed to parse date"),
         Ok(d) => Ok(d), 
