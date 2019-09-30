@@ -37,22 +37,22 @@ fn get_reading()-> Reading {
         }
     };
 
-    let exports = loop {
-        print!("    Grid exports [kWh]: ");
-        io::stdout().flush().ok().expect("Could not flush!");
-        let exports = ask_for_number();
-        match exports {
-            Ok(ex) => break ex,
-            Err(_e) => println!("Could not parse number, try again."),
-        }
-    };
-
     let imports = loop {
         print!("    Grid imports [kWh]: ");
         io::stdout().flush().ok().expect("Could not flush!");
         let imports= ask_for_number();
         match imports {
             Ok(i) => break i,
+            Err(_e) => println!("Could not parse number, try again."),
+        }
+    };
+    
+    let exports = loop {
+        print!("    Grid exports [kWh]: ");
+        io::stdout().flush().ok().expect("Could not flush!");
+        let exports = ask_for_number();
+        match exports {
+            Ok(ex) => break ex,
             Err(_e) => println!("Could not parse number, try again."),
         }
     };
