@@ -36,10 +36,10 @@ impl Database {
         count == 1
     }
 
-    pub fn add_reading(&self, reading : &Reading) {
+    pub fn add_reading(&self, reading : Reading) {
         let mut cursor = self.connection.prepare(
             "INSERT INTO reading ( date, generation, imports, exports )
-             VALUES ( ?, ?, ?, ? )").unwrap().cursor();
+             VALUES ( ?, ?, ?, ? ))").unwrap().cursor();
         
         let date = reading.date.format("%Y-%m-%d").to_string();
        
@@ -47,8 +47,6 @@ impl Database {
                       Value::Float(reading.generation as f64),
                       Value::Float(reading.imports as f64),
                       Value::Float(reading.exports as f64)]).unwrap();
-        
-        cursor.next().unwrap();
     }
 
     pub fn get_reading_for_date(&self, date : NaiveDate) -> Option<Reading> {
@@ -58,7 +56,7 @@ impl Database {
 
         let date = date.format("%Y-%m-%d").to_string();
 
-        cursor.bind(&[Value::String(date)]).unwrap();
+        cursor.bind(&[Value::String(date)]);
 
         let first_row = cursor.next().unwrap();
         match first_row {
@@ -99,26 +97,17 @@ mod tests {
         db.create_table();
 
         let reading_in = Reading {
-                date : NaiveDate::from_ymd(2019, 10, 4),
+                date : NaiveDate::from_ymd(2019, 10, 04),
                 generation : 3.0,
                 imports : 5.0,
                 exports : 1.0,
             };
+        
+        assert_eq!(None, db.get_reading_for_date(2019, 10, 03));
 
-        match db.get_reading_for_date(reading_in.date) {
-            None => (),
-            _ => panic!("Unexpected got a result."),
-        }
-
-
-        db.add_reading(&reading_in);
+        db.add_reading(reading_in);
     
-        let reading_out = match db.get_reading_for_date(reading_in.date) {
-            Some(reading) => reading, 
-            None => panic!("No reading returned for date {}.", 
-                           reading_in.date.format("%Y-%m-%d")),
-        };
-
+        if let reading_out = db.get_reading_for_date(reading_in.date);
         assert_eq!(reading_in.date, reading_out.date);
         assert_eq!(reading_in.generation, reading_out.generation);
         assert_eq!(reading_in.imports, reading_out.imports);

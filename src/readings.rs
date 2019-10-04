@@ -1,6 +1,7 @@
 use chrono::{ NaiveDate };
 
 /// A collection of readings for a given date. 
+#[derive(Debug)]
 pub struct Reading {
     /// The date the readings were made.
     pub date: NaiveDate,
