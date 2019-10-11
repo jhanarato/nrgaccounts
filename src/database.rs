@@ -27,7 +27,7 @@ impl Database {
             connection,
         };
 
-        if !db.table_exists("readings") {
+        if !db.table_exists("reading") {
             db.create_tables();
         }
 
