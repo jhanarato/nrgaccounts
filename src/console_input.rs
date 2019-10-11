@@ -15,7 +15,8 @@ pub fn get_reading_pair() -> ReadingPair {
     ReadingPair { first, second }
 }
 
-fn get_reading()-> Reading {
+/// Create a Reading object from console input.
+pub fn get_reading()-> Reading {
 
     let date = loop {
         print!("    Date [DD-MM-YY]:    ");

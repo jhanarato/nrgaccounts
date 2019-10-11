@@ -23,13 +23,19 @@ impl Database {
     pub fn open(file : &str) -> Database {
         let connection = sqlite::open(file).unwrap();
         
-        Database {
+        let db = Database {
             connection,
+        };
+
+        if !db.table_exists("readings") {
+            db.create_tables();
         }
+
+        db
     }
 
     /// Create all needed tables.
-    pub fn create_table(&self) {
+    pub fn create_tables(&self) {
         self.connection.execute("
             CREATE TABLE reading (
             date TEXT NOT NULL,
@@ -95,7 +101,14 @@ impl Database {
             None => None,
         }
     }
+    
+    pub fn number_of_readings(&self) -> i64 {
+        let mut cursor = self.connection.prepare(
+            "SELECT COUNT(*) FROM reading").unwrap().cursor();
         
+        let row = cursor.next().unwrap().unwrap();
+        row[0].as_integer().unwrap()   
+    }
 }
 
 #[cfg(test)]
@@ -116,25 +129,15 @@ mod tests {
         assert_eq!(reading.exports, 5.5);
     }
 
-  
-    #[test]
-    fn create_ok() {
-        let db = Database::open(":memory:");
-        db.create_table();
-    }
-
     #[test]
     fn table_exists() {
         let db = Database::open(":memory:");
-        assert!(!db.table_exists("reading"));
-        db.create_table();
         assert!(db.table_exists("reading"));
     }
 
     #[test]
     fn add_retrieve_reading() {
         let db = Database::open(":memory:");
-        db.create_table();
 
         let reading_in = Reading {
                 date : NaiveDate::from_ymd(2019, 10, 4),
@@ -166,7 +169,7 @@ mod tests {
     #[test]
     fn most_recent_reading_ok() {
         let db = Database::open(":memory:");
-        db.create_table();
+
         let reading_1 = Reading {
                 date : NaiveDate::from_ymd(2019, 10, 10),
                 generation : 30.0,
@@ -202,6 +205,40 @@ mod tests {
         assert_eq!(most_recent.exports, reading_2.exports);
 
     }        
+    
+    #[test]
+    fn number_of_readings_ok() {
+        let db = Database::open(":memory:");
+        
+        let reading_1 = Reading {
+                date : NaiveDate::from_ymd(2019, 10, 10),
+                generation : 30.0,
+                imports : 20.0,
+                exports : 5.0,
+            };
+
+        let reading_2 = Reading {
+                date : NaiveDate::from_ymd(2019, 10, 11),
+                generation : 60.0,
+                imports : 30.0,
+                exports : 10.0,
+            };
+
+        let reading_3 = Reading {
+                date : NaiveDate::from_ymd(2019, 10, 12),
+                generation : 90.0,
+                imports : 60.0,
+                exports : 20.0,
+            };
+
+        assert_eq!(db.number_of_readings(), 0);
+        db.add_reading(&reading_1);
+        assert_eq!(db.number_of_readings(), 1);
+        db.add_reading(&reading_2);
+        assert_eq!(db.number_of_readings(), 2);
+        db.add_reading(&reading_3);
+        assert_eq!(db.number_of_readings(), 3);
+    }
 }
 
 
