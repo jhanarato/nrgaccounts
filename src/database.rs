@@ -3,11 +3,23 @@ use chrono::{ NaiveDate };
 
 use crate::readings::Reading;
 
+
+// Helper function. Take a row, get a reading.
+fn row_to_reading(row : &[Value]) -> Reading {
+    let date = row[0].as_string().unwrap();
+    let date = NaiveDate::parse_from_str(date, "%Y-%m-%d").unwrap();
+    let generation = row[1].as_float().unwrap() as f32;
+    let imports =    row[2].as_float().unwrap() as f32;
+    let exports =    row[3].as_float().unwrap() as f32;
+    Reading { date, generation, imports, exports }
+}
+
 pub struct Database {
    connection : Connection,
 }
 
 impl Database {
+    /// Get a connection to a database with the given filename.
     pub fn open(file : &str) -> Database {
         let connection = sqlite::open(file).unwrap();
         
@@ -16,6 +28,7 @@ impl Database {
         }
     }
 
+    /// Create all needed tables.
     pub fn create_table(&self) {
         self.connection.execute("
             CREATE TABLE reading (
@@ -25,7 +38,7 @@ impl Database {
             exports REAL NOT NULL)").unwrap();
     }
 
-
+    /// True if a table with the given name exists.
     pub fn table_exists(&self, name : &str) -> bool {
         let mut statement = self.connection.prepare(
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' and name=?")
@@ -35,7 +48,8 @@ impl Database {
         let count = statement.read::<i64>(0).unwrap();
         count == 1
     }
-
+    
+    /// Add a new reading to the database.
     pub fn add_reading(&self, reading : &Reading) {
         let mut cursor = self.connection.prepare(
             "INSERT INTO reading ( date, generation, imports, exports )
@@ -50,7 +64,9 @@ impl Database {
         
         cursor.next().unwrap();
     }
+    
 
+    /// Get the reading for a given date or none if it doesn't exists.
     pub fn get_reading_for_date(&self, date : NaiveDate) -> Option<Reading> {
         let mut cursor = self.connection.prepare(
             "SELECT * FROM reading WHERE date = ?")
@@ -62,17 +78,11 @@ impl Database {
 
         let first_row = cursor.next().unwrap();
         match first_row {
-            Some(row) => {
-                let date = row[0].as_string().unwrap();
-                let date = NaiveDate::parse_from_str(date, "%Y-%m-%d").unwrap();
-                let generation = row[1].as_float().unwrap() as f32;
-                let imports =    row[2].as_float().unwrap() as f32;
-                let exports =    row[3].as_float().unwrap() as f32;
-                Some(Reading { date, generation, imports, exports })
-            },
+            Some(row) => Some(row_to_reading(&row)),
             None => None,
         }
-    }
+   }
+        
 }
 
 #[cfg(test)]
@@ -123,6 +133,21 @@ mod tests {
         assert_eq!(reading_in.generation, reading_out.generation);
         assert_eq!(reading_in.imports, reading_out.imports);
         assert_eq!(reading_in.exports, reading_out.exports);
+    }
+
+    #[test]
+    fn row_to_reading_ok() {
+        let row = [Value::String("2010-10-10".to_string()), 
+                   Value::Float(10.0),
+                   Value::Float(20.0),
+                   Value::Float(5.5)];
+
+        let reading = row_to_reading(&row);
+
+        assert_eq!(reading.date, NaiveDate::from_ymd(2010, 10, 10));
+        assert_eq!(reading.generation, 10.0);
+        assert_eq!(reading.imports, 20.0);
+        assert_eq!(reading.exports, 5.5);
     }
 }
 
