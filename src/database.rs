@@ -81,14 +81,42 @@ impl Database {
             Some(row) => Some(row_to_reading(&row)),
             None => None,
         }
-   }
+    }
+
+    pub fn most_recent_reading(&self) -> Option<Reading> {
+        let mut cursor = self.connection.prepare(
+            "SELECT * FROM reading 
+             ORDER BY date DESC
+             LIMIT 1").unwrap().cursor();
+        
+        let first_row = cursor.next().unwrap();
+        match first_row {
+            Some(row) => Some(row_to_reading(&row)),
+            None => None,
+        }
+    }
         
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-   
+    #[test]
+    fn row_to_reading_ok() {
+        let row = [Value::String("2010-10-10".to_string()), 
+                   Value::Float(10.0),
+                   Value::Float(20.0),
+                   Value::Float(5.5)];
+
+        let reading = row_to_reading(&row);
+
+        assert_eq!(reading.date, NaiveDate::from_ymd(2010, 10, 10));
+        assert_eq!(reading.generation, 10.0);
+        assert_eq!(reading.imports, 20.0);
+        assert_eq!(reading.exports, 5.5);
+    }
+
+  
     #[test]
     fn create_ok() {
         let db = Database::open(":memory:");
@@ -136,19 +164,44 @@ mod tests {
     }
 
     #[test]
-    fn row_to_reading_ok() {
-        let row = [Value::String("2010-10-10".to_string()), 
-                   Value::Float(10.0),
-                   Value::Float(20.0),
-                   Value::Float(5.5)];
+    fn most_recent_reading_ok() {
+        let db = Database::open(":memory:");
+        db.create_table();
+        let reading_1 = Reading {
+                date : NaiveDate::from_ymd(2019, 10, 10),
+                generation : 30.0,
+                imports : 20.0,
+                exports : 5.0,
+            };
 
-        let reading = row_to_reading(&row);
+        // Most recent reading.
+        let reading_2 = Reading {
+                date : NaiveDate::from_ymd(2019, 10, 12),
+                generation : 29.0,
+                imports : 19.0,
+                exports : 4.0,
+            };
 
-        assert_eq!(reading.date, NaiveDate::from_ymd(2010, 10, 10));
-        assert_eq!(reading.generation, 10.0);
-        assert_eq!(reading.imports, 20.0);
-        assert_eq!(reading.exports, 5.5);
-    }
+        let reading_3 = Reading {
+                date : NaiveDate::from_ymd(2019, 10, 11),
+                generation : 28.0,
+                imports : 18.0,
+                exports : 3.0,
+            
+            };
+
+        db.add_reading(&reading_1);
+        db.add_reading(&reading_2);
+        db.add_reading(&reading_3);
+
+        let most_recent = db.most_recent_reading().unwrap();
+
+        assert_eq!(most_recent.date, reading_2.date);
+        assert_eq!(most_recent.generation, reading_2.generation);
+        assert_eq!(most_recent.imports, reading_2.imports);
+        assert_eq!(most_recent.exports, reading_2.exports);
+
+    }        
 }
 
 
