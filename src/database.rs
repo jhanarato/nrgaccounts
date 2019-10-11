@@ -20,9 +20,9 @@ impl Database {
         self.connection.execute("
             CREATE TABLE reading (
             date TEXT NOT NULL,
-            generation TEXT NOT NULL,
-            imports TEXT NOT NULL,
-            exports TEXT NOT NULL)").unwrap();
+            generation REAL NOT NULL,
+            imports REAL NOT NULL,
+            exports REAL NOT NULL)").unwrap();
     }
 
 
