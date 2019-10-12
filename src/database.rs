@@ -14,6 +14,12 @@ fn row_to_reading(row : &[Value]) -> Reading {
     Reading { date, generation, imports, exports }
 }
 
+// Convert the f32 to f64 and round to one decimal place.
+fn convert_for_sqlite(f32_val : f32) -> f64 {
+    let f64_val = f32_val as f64;
+    (f64_val * 10.0).round() / 10.0
+}
+
 pub struct Database {
    connection : Connection,
 }
@@ -62,11 +68,13 @@ impl Database {
              VALUES ( ?, ?, ?, ? )").unwrap().cursor();
         
         let date = reading.date.format("%Y-%m-%d").to_string();
-       
+        let generation = convert_for_sqlite(reading.generation);
+        let imports = convert_for_sqlite(reading.imports);
+        let exports = convert_for_sqlite(reading.exports);
         cursor.bind(&[Value::String(date), 
-                      Value::Float(reading.generation as f64),
-                      Value::Float(reading.imports as f64),
-                      Value::Float(reading.exports as f64)]).unwrap();
+                      Value::Float(generation),
+                      Value::Float(imports),
+                      Value::Float(exports)]).unwrap();
         
         cursor.next().unwrap();
     }
@@ -238,6 +246,13 @@ mod tests {
         assert_eq!(db.number_of_readings(), 2);
         db.add_reading(&reading_3);
         assert_eq!(db.number_of_readings(), 3);
+    }
+
+    #[test]
+    fn convert_for_sqlite_ok() {
+        let in_f32 : f32 = 1.1;
+        let out_f64 : f64 = convert_for_sqlite(in_f32);
+        assert_eq!(out_f64, 1.1);
     }
 }
 
